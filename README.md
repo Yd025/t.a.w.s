@@ -1,6 +1,3 @@
-# t.a.w.s
-AWS-powered educational AI that guides students using Bedrock Guardrails to prevent cheating, restricted strictly to course materials via RAG.
-
 # 🎓 T.A.W.S. (Teaching Assistant With Safeguards)
 
 **An AWS-powered AI teaching assistant that guides students without giving away the answers.** 
