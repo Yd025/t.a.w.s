@@ -8,12 +8,24 @@ interface Message {
   timestamp: Date;
 }
 
-export function ChatInterface() {
+interface CourseMaterial {
+  id: string;
+  name: string;
+  type: 'pdf' | 'doc' | 'note';
+  uploadedAt: Date;
+}
+
+interface ChatInterfaceProps {
+  materials: CourseMaterial[];
+  onFlaggedPrompt: () => void;
+}
+
+export function ChatInterface({ materials, onFlaggedPrompt }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your AI learning assistant. I have access to your uploaded course materials and notes. How can I help you today?',
+      content: 'Hello! I\'m your AI learning assistant. I can answer questions based on the course materials provided by your professor.',
       timestamp: new Date(),
     },
   ]);
@@ -29,6 +41,11 @@ export function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
+  const isPolicyViolation = (question: string) => {
+    const policyTerms = ['illegal', 'harm', 'attack', 'violence', 'cheat', 'hate'];
+    return policyTerms.some((term) => question.toLowerCase().includes(term));
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -39,7 +56,12 @@ export function ChatInterface() {
       timestamp: new Date(),
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages((current) => [...current, userMessage]);
+    const violation = isPolicyViolation(input);
+    if (violation) {
+      onFlaggedPrompt();
+    }
+
     setInput('');
     setIsTyping(true);
 
@@ -47,10 +69,12 @@ export function ChatInterface() {
       const aiMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
         role: 'assistant',
-        content: generateAIResponse(input),
+        content: violation
+          ? 'That request may violate usage policy, so I can\'t provide an answer. Your professor will be notified if there are repeated policy issues.'
+          : generateAIResponse(input),
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
       setIsTyping(false);
     }, 1000);
   };
@@ -58,13 +82,17 @@ export function ChatInterface() {
   const generateAIResponse = (question: string): string => {
     const lowerQuestion = question.toLowerCase();
 
-    if (lowerQuestion.includes('neural network')) {
-      return 'Based on your uploaded materials "Neural Networks Basics", a neural network is a computational model inspired by biological neural networks. It consists of interconnected nodes (neurons) organized in layers that process information through weighted connections. Would you like me to explain any specific aspect in more detail?';
-    } else if (lowerQuestion.includes('machine learning')) {
-      return 'From your course material "Introduction to Machine Learning", machine learning is a subset of AI that enables systems to learn and improve from experience without being explicitly programmed. The main types are supervised learning, unsupervised learning, and reinforcement learning. What specific topic would you like to explore?';
-    } else {
-      return 'I can help you understand concepts from your uploaded course materials. Try asking me about topics like neural networks, machine learning fundamentals, or specific concepts from your notes. What would you like to learn about?';
+    const materialNames = materials.map((material) => material.name.toLowerCase());
+
+    if (lowerQuestion.includes('neural network') && materialNames.some((name) => name.includes('neural networks'))) {
+      return 'A neural network is a computational model inspired by biological neural systems. It consists of interconnected neurons organized into layers, which transform inputs into outputs through learned weights and activation functions. Would you like to review an example from your course materials?';
     }
+
+    if (lowerQuestion.includes('machine learning') && materialNames.some((name) => name.includes('machine learning'))) {
+      return 'Machine learning is the study of algorithms that improve through experience. Common categories include supervised learning, unsupervised learning, and reinforcement learning. Which part of the course would you like to explore in more detail?';
+    }
+
+    return 'I can help you answer questions from the course materials your professor provided. Ask about concepts, definitions, examples, or summaries from the syllabus and readings.';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -147,7 +175,7 @@ export function ChatInterface() {
             </button>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            AI responses are based on your uploaded course materials
+            AI responses are based on your professor-provided course materials.
           </p>
         </div>
       </div>
