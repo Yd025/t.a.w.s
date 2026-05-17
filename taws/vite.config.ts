@@ -12,10 +12,13 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/v1/chat': {
+      // Catch anything starting with /v1
+      '/v1': {
+        // ONLY put the base URL here. Do not include /v1 or /chat at the end!
         target: 'https://x12ljhcpxf.execute-api.us-east-1.amazonaws.com',
         changeOrigin: true,
-      },
-    },
-  },
+        secure: true,
+      }
+    }
+  }
 })

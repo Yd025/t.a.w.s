@@ -1,17 +1,11 @@
-import { KnowledgeBaseSidebar } from './components/KnowledgeBaseSidebar';
 import { ChatInterface } from './components/ChatInterface';
-import { TopBar } from './components/TopBar';
-import { DeadlinesPanel } from './components/DeadlinesPanel';
+import { TasksPanel } from './components/TasksPanel';
 
 export default function App() {
   return (
-    <div className="size-full flex flex-col bg-background">
-      <TopBar />
-      <div className="flex-1 flex min-h-0">
-        <KnowledgeBaseSidebar />
-        <ChatInterface />
-        <DeadlinesPanel />
-      </div>
+    <div className="flex h-full min-h-0 bg-background">
+      <ChatInterface />
+      <TasksPanel />
     </div>
   );
 }

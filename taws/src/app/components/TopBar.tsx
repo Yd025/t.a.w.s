@@ -1,4 +1,4 @@
-import { HelpCircle, Clock } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './ui/button';
 import {
