@@ -14,7 +14,7 @@ Experience the T.A.W.S. platform live right now! No installation required.
 ---
 
 ## 🚀 The Problem
-Universities and professors want to integrate generative AI into their courses to provide 24/7, personalized student support. However, out-of-the-box LLMs act as "cheat codes"—they will happily write complete essays, solve complex mathematical proofs, or write full code implementations, thereby bypassing the student's actual learning process. 
+The theme of AWSHacks 2026 is "Build with Gratitude." As students at the University of Washington , we wanted to use this opportunity to give back to the educators and mentors who have shaped our academic and professional journeys.  We are deeply grateful for the guidance of mentors such as Dr. Loveless, Dr. Richard Li, Isaiah Siegl, and Ting Gong. Their dedication to teaching and research inspired us to build a tool that supports the very mission they lead every day. Currently, the rise of generative AI has placed professors in a difficult position where they must act as "plagiarism police" rather than mentors. T.A.W.S. is our way of saying thank you—by providing a tool that handles 24/7 student support while fiercely protecting the academic integrity of their courses.  
 
 ## 💡 The Solution
 **T.A.W.S.** is a specialized AI teaching assistant engineered specifically for academic integrity. Utilizing strict **Amazon Bedrock Guardrails** and specialized system prompting, T.A.W.S. actively refuses to do the work for the student. Instead of giving direct answers, it provides Socratic guidance, breaks problems down into manageable steps, and roots its explanations *strictly* in the professor's uploaded syllabus and course materials.
@@ -24,6 +24,27 @@ Universities and professors want to integrate generative AI into their courses t
 ## ☁️ Serverless AWS Architecture
 
 T.A.W.S. is powered by a fully serverless, event-driven AWS architecture designed for high scalability, low latency, and strict educational integrity.
+
+```mermaid
+graph TD
+    User["User Browser"]
+    Amplify["AWS Amplify<br/>(Frontend Hosting)"]
+    APIGateway["Amazon API Gateway<br/>(Secure Routing & CORS)"]
+    Lambda["AWS Lambda<br/>(Python Backend & Session Memory)"]
+    Bedrock["Amazon Bedrock<br/>(Nova Lite Model)"]
+    Guardrails["Bedrock Guardrails<br/>(Anti-Cheating / PII Filter)"]
+    OpenSearch["Amazon OpenSearch Serverless<br/>(Vector Knowledge Base)"]
+    S3["Amazon S3<br/>(Syllabus & Course Docs)"]
+
+    User -- "HTTPS / REST" --> Amplify
+    Amplify --> APIGateway
+    APIGateway --> Lambda
+    Lambda --> Bedrock
+    Lambda --> Guardrails
+    Guardrails -- "Enforces Policy" --> Bedrock
+    Bedrock --> OpenSearch
+    S3 -- "Data Source" --> OpenSearch
+```
 
 ### **1. AI & Orchestration (Amazon Bedrock)**
 * **Foundation Model:** Powered by **Amazon Nova Lite**, a highly efficient, fast, and capable model perfectly suited for text-based educational reasoning, scaffolding, and logical deduction.
