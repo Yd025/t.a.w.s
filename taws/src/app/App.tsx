@@ -7,7 +7,7 @@ export default function App() {
   return (
     <div className="size-full flex flex-col bg-background">
       <TopBar />
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         <KnowledgeBaseSidebar />
         <ChatInterface />
         <DeadlinesPanel />

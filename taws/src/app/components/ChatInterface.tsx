@@ -143,8 +143,8 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-background">
-      <div className="flex-1 overflow-y-auto p-6 pb-32">
+    <div className="flex-1 min-h-0 flex flex-col bg-background min-w-0">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6">
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.map((message) => (
             <div
@@ -193,7 +193,7 @@ export function ChatInterface() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-80 right-0 bg-background border-t border-border p-6">
+      <div className="flex-shrink-0 bg-background border-t border-border p-6">
         <div className="max-w-3xl mx-auto">
           <div className="flex gap-3 items-end">
             <div className="flex-1 bg-input-background rounded-2xl px-4 py-3 border border-border focus-within:border-primary transition-colors">
