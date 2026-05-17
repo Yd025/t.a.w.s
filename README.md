@@ -16,12 +16,21 @@ Professors want to integrate AI into their courses to provide 24/7 student suppo
 ## 🛠️ Architecture & AWS Integration
 This project leverages a serverless AWS architecture:
 
-*   **Amazon S3 (Knowledge Base):** Acts as the single source of truth, storing the professor's syllabus, lecture slides, and assignment rubrics.
-*   **Amazon Bedrock (The Brain & The Bouncer):** 
-    *   Uses **Knowledge Bases** (RAG) to ensure the AI only pulls answers from the approved S3 course materials.
-    *   Uses **Guardrails** to intercept and block prompts asking for direct code implementations, full essays, or off-topic queries.
-*   **AWS Lambda (The Middleman):** Handles API requests from the frontend, routes prompts to Bedrock, evaluates guardrail triggers, and processes the response.
-*   **Amazon DynamoDB (The Analytics):** Logs every interaction, specifically tracking when a guardrail is triggered to alert the professor of potential academic integrity risks or widespread class confusion.
+## ☁️ AWS Cloud Architecture
+
+T.A.W.S. (Teaching Assistant With Safeguards) is powered by a fully serverless, event-driven AWS architecture designed for scalability, security, and educational integrity. 
+
+* **Amazon Bedrock:** The core AI orchestration and routing layer.
+  * **Agents:** Utilizes the ReAct (Reason and Action) framework to process student queries, decide when to search the syllabus, or when to trigger an action.
+  * **Knowledge Bases:** Employs a vector database to ground the AI strictly in approved course materials via RAG (Retrieval-Augmented Generation).
+  * **Guardrails:** Implements strict content filters, prompt injection prevention, and a custom blocked-topics list to actively prevent cheating and the delegation of coursework.
+* **AWS Lambda:** Handles serverless backend execution via Python 3.12.
+  * Powers the core REST API chat handler that bridges the frontend and Bedrock.
+  * Executes Bedrock Action Groups (e.g., the `report_guardrail_breach` function) to handle dynamic backend logic and alerts.
+* **Amazon API Gateway:** Acts as the secure front door to the backend pipeline. Configured as a REST API with Lambda Proxy Integration, strict CORS policies, and Usage Plans to throttle request rates and prevent abuse.
+* **Amazon S3 (Simple Storage Service):** Serves as the secure document repository (`taws-course-material-storage`), holding the flattened course syllabi, lecture slides, and reference materials for Bedrock ingestion.
+* **AWS IAM (Identity and Access Management):** Manages the principle of least privilege across the application, handling execution roles for Lambda-to-Bedrock communication and securing CLI access for deployment.
+* **AWS Amplify:** Hosts the frontend web application, providing lightning-fast global content delivery and automatic SSL (HTTPS) to ensure secure, encrypted communication with the API Gateway.
 
 ## ✨ Key Features
 - **Strict Contextual Grounding:** If a question isn't covered in the S3 syllabus, the AI won't answer it.
