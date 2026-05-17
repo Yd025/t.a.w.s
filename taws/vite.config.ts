@@ -10,4 +10,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/v1/chat': {
+        target: 'https://x12ljhcpxf.execute-api.us-east-1.amazonaws.com',
+        changeOrigin: true,
+      },
+    },
+  },
 })

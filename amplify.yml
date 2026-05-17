@@ -1,6 +1,10 @@
 version: 1
 applications:
   - appRoot: taws
+    customRules:
+      - source: /v1/chat
+        target: https://x12ljhcpxf.execute-api.us-east-1.amazonaws.com/v1/chat
+        status: '200'
     backend:
       phases:
         build:

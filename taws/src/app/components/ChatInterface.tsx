@@ -1,6 +1,57 @@
 import { Send, Bot, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
+// Same-origin path; Amplify (prod) and Vite (dev) proxy to API Gateway (avoids CORS).
+const CHAT_API_URL = import.meta.env.VITE_CHAT_API_URL ?? '/v1/chat';
+
+function extractLlmText(data: unknown): string | null {
+  if (typeof data === 'string' && data.trim()) return data;
+  if (!data || typeof data !== 'object') return null;
+  const o = data as Record<string, unknown>;
+  const keys = [
+    'response',
+    'message',
+    'answer',
+    'text',
+    'content',
+    'output',
+    'result',
+  ];
+  for (const k of keys) {
+    const v = o[k];
+    if (typeof v === 'string' && v.trim()) return v;
+  }
+  return null;
+}
+
+function parseLlmResponse(raw: string): string {
+  const trimmed = raw.trim();
+  try {
+    const outer = JSON.parse(trimmed) as unknown;
+    const direct = extractLlmText(outer);
+    if (direct) return direct;
+
+    if (outer && typeof outer === 'object' && 'body' in outer) {
+      const body = (outer as { body: unknown }).body;
+      if (typeof body === 'string') {
+        const innerTrim = body.trim();
+        try {
+          const inner = JSON.parse(innerTrim) as unknown;
+          return extractLlmText(inner) ?? innerTrim;
+        } catch {
+          return innerTrim;
+        }
+      }
+    }
+
+    return typeof outer === 'object'
+      ? JSON.stringify(outer)
+      : String(outer);
+  } catch {
+    return trimmed;
+  }
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -30,47 +81,63 @@ export function ChatInterface() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    const question = input.trim();
+    if (!question || isTyping) return;
 
     const userMessage: Message = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 11),
       role: 'user',
-      content: input,
+      content: question,
       timestamp: new Date(),
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append('question', question);
+
+      const res = await fetch(CHAT_API_URL, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const raw = await res.text();
+      if (!res.ok) {
+        throw new Error(raw || `Request failed with status ${res.status}`);
+      }
+
+      const reply = parseLlmResponse(raw);
       const aiMessage: Message = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 11),
         role: 'assistant',
-        content: generateAIResponse(input),
+        content: reply,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to reach the chat service.';
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substring(2, 11),
+          role: 'assistant',
+          content: `Sorry, something went wrong: ${message}`,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
-  };
-
-  const generateAIResponse = (question: string): string => {
-    const lowerQuestion = question.toLowerCase();
-
-    if (lowerQuestion.includes('neural network')) {
-      return 'Based on your uploaded materials "Neural Networks Basics", a neural network is a computational model inspired by biological neural networks. It consists of interconnected nodes (neurons) organized in layers that process information through weighted connections. Would you like me to explain any specific aspect in more detail?';
-    } else if (lowerQuestion.includes('machine learning')) {
-      return 'From your course material "Introduction to Machine Learning", machine learning is a subset of AI that enables systems to learn and improve from experience without being explicitly programmed. The main types are supervised learning, unsupervised learning, and reinforcement learning. What specific topic would you like to explore?';
-    } else {
-      return 'I can help you understand concepts from your uploaded course materials. Try asking me about topics like neural networks, machine learning fundamentals, or specific concepts from your notes. What would you like to learn about?';
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      void handleSend();
     }
   };
 
@@ -133,14 +200,15 @@ export function ChatInterface() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask me anything about your course materials..."
                 className="w-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <button
-              onClick={handleSend}
-              disabled={!input.trim()}
+              type="button"
+              onClick={() => void handleSend()}
+              disabled={!input.trim() || isTyping}
               className="flex-shrink-0 w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
             >
               <Send className="w-5 h-5" />
