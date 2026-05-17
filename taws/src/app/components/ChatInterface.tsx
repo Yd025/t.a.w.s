@@ -96,12 +96,13 @@ export function ChatInterface() {
     setIsTyping(true);
 
     try {
-      const formData = new FormData();
-      formData.append('question', question);
-
+      // FIX: Use a standard JSON payload instead of FormData
       const res = await fetch(CHAT_API_URL, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question }),
       });
 
       const raw = await res.text();
