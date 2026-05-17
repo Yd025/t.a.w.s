@@ -68,5 +68,5 @@ T.A.W.S. is powered by a fully serverless, event-driven AWS architecture designe
 **Yidan (Adelin) Ma**  
 🌐 [Personal Website](https://yd025.github.io/) | 🐙 [GitHub Profile](https://github.com/Yd025)
 
-**Oscar Shijie Song 
+**Oscar Shijie Song**
 🌐 [Personal Website](https://oscariano.github.io/) | 🐙 [GitHub Profile](https://github.com/oscariano)
