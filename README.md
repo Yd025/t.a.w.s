@@ -5,37 +5,67 @@
 [![AWS Bedrock](https://img.shields.io/badge/AWS-Bedrock-FF9900?logo=amazonaws)](https://aws.amazon.com/bedrock/)
 [![AWS Lambda](https://img.shields.io/badge/AWS-Lambda-FF9900?logo=awslambda)](https://aws.amazon.com/lambda/)
 [![Amazon S3](https://img.shields.io/badge/Amazon-S3-569A31?logo=amazons3)](https://aws.amazon.com/s3/)
-[![Amazon DynamoDB](https://img.shields.io/badge/Amazon-DynamoDB-4053D6?logo=amazondynamodb)](https://aws.amazon.com/dynamodb/)
+[![AWS Amplify](https://img.shields.io/badge/AWS-Amplify-FF9900?logo=awsamplify)](https://aws.amazon.com/amplify/)
+
+## 🌐 Live Demo
+Experience the T.A.W.S. platform live right now! No installation required.
+👉 **[Try the Live Web App Here](https://main.d3sxd2mzkjp4np.amplifyapp.com/)**
+
+---
 
 ## 🚀 The Problem
-Professors want to integrate AI into their courses to provide 24/7 student support, but standard LLMs easily act as "cheat codes" by writing full essays or completing code assignments. 
+Universities and professors want to integrate generative AI into their courses to provide 24/7, personalized student support. However, out-of-the-box LLMs act as "cheat codes"—they will happily write complete essays, solve complex mathematical proofs, or write full code implementations, thereby bypassing the student's actual learning process. 
 
 ## 💡 The Solution
-**T.A.W.S.** is a specialized AI teaching assistant that uses **Amazon Bedrock Guardrails** to actively refuse to do the work for the student. Instead of giving direct answers, it provides Socratic guidance, hints, and conceptual explanations based *strictly* on the professor's uploaded syllabus and course materials.
+**T.A.W.S.** is a specialized AI teaching assistant engineered specifically for academic integrity. Utilizing strict **Amazon Bedrock Guardrails** and specialized system prompting, T.A.W.S. actively refuses to do the work for the student. Instead of giving direct answers, it provides Socratic guidance, breaks problems down into manageable steps, and roots its explanations *strictly* in the professor's uploaded syllabus and course materials.
 
-## 🛠️ Architecture & AWS Integration
-This project leverages a serverless AWS architecture:
+---
 
-## ☁️ AWS Cloud Architecture
+## ☁️ Serverless AWS Architecture
 
-T.A.W.S. (Teaching Assistant With Safeguards) is powered by a fully serverless, event-driven AWS architecture designed for scalability, security, and educational integrity. 
+T.A.W.S. is powered by a fully serverless, event-driven AWS architecture designed for high scalability, low latency, and strict educational integrity.
 
-* **Amazon Bedrock:** The core AI orchestration and routing layer.
-  * **Agents:** Utilizes the ReAct (Reason and Action) framework to process student queries, decide when to search the syllabus, or when to trigger an action.
-  * **Knowledge Bases:** Employs a vector database to ground the AI strictly in approved course materials via RAG (Retrieval-Augmented Generation).
-  * **Guardrails:** Implements strict content filters, prompt injection prevention, and a custom blocked-topics list to actively prevent cheating and the delegation of coursework.
-* **AWS Lambda:** Handles serverless backend execution via Python 3.12.
-  * Powers the core REST API chat handler that bridges the frontend and Bedrock.
-  * Executes Bedrock Action Groups (e.g., the `report_guardrail_breach` function) to handle dynamic backend logic and alerts.
-* **Amazon API Gateway:** Acts as the secure front door to the backend pipeline. Configured as a REST API with Lambda Proxy Integration, strict CORS policies, and Usage Plans to throttle request rates and prevent abuse.
-* **Amazon S3 (Simple Storage Service):** Serves as the secure document repository (`taws-course-material-storage`), holding the flattened course syllabi, lecture slides, and reference materials for Bedrock ingestion.
-* **AWS IAM (Identity and Access Management):** Manages the principle of least privilege across the application, handling execution roles for Lambda-to-Bedrock communication and securing CLI access for deployment.
-* **AWS Amplify:** Hosts the frontend web application, providing lightning-fast global content delivery and automatic SSL (HTTPS) to ensure secure, encrypted communication with the API Gateway.
+### **1. AI & Orchestration (Amazon Bedrock)**
+* **Foundation Model:** Powered by **Amazon Nova Lite**, a highly efficient, fast, and capable model perfectly suited for text-based educational reasoning, scaffolding, and logical deduction.
+* **Knowledge Bases (RAG):** Uses Retrieval-Augmented Generation to ground the AI in factual course data. Documents are vectorized using an embedding model and stored in **Amazon OpenSearch Serverless** (the high-performance vector database driving the Knowledge Base).
+* **Bedrock Agents:** Utilizes the ReAct (Reason and Action) framework to process student queries, intelligently deciding when to query the OpenSearch vector database for syllabus logistics versus when to rely on general domain knowledge.
+* **Bedrock Guardrails:** Implements uncompromising content filters. Custom blocked-topic lists prevent the delegation of coursework (e.g., "write my code", "solve this equation") and mask Personally Identifiable Information (PII).
+
+### **2. Backend Compute (AWS Lambda & API Gateway)**
+* **Amazon API Gateway:** Acts as the secure front door to the backend pipeline. Configured as a REST API with strict CORS policies to ensure secure browser-to-cloud communication.
+* **AWS Lambda:** A lightweight, serverless Python 3.12 backend handler. It manages session persistence (Session IDs) so the AI remembers conversation context, bridges the frontend with the Bedrock Agent Runtime, and streams responses back to the user.
+
+### **3. Storage & Hosting (S3 & Amplify)**
+* **Amazon S3 (Simple Storage Service):** Serves as the secure document repository (`taws-course-material-storage`), holding the flattened course syllabi, lecture slides, and reference PDFs that get ingested into OpenSearch.
+* **AWS Amplify:** Hosts the React/Vite frontend web application, providing lightning-fast global content delivery (CDN) and automatic SSL (HTTPS) encryption.
+
+### **4. Security (IAM)**
+* **AWS IAM (Identity and Access Management):** Enforces the principle of least privilege across the application. Custom execution roles ensure Lambda can only invoke specific Bedrock Agents, and Bedrock can only read from authorized S3 buckets.
+
+---
+
+## 🔄 How the Data Flows
+1. **User Input:** A student asks a question via the React UI hosted on AWS Amplify.
+2. **API Request:** The request (along with a unique `sessionId` for memory) is sent via HTTPS to API Gateway.
+3. **Lambda Execution:** API Gateway triggers a Python Lambda function, which formats the payload and invokes the Bedrock Agent.
+4. **Guardrail Check (Pre-Processing):** Bedrock intercepts the prompt. If the student asks for direct answers or attempts to jailbreak the bot, the Guardrail blocks it immediately.
+5. **Knowledge Retrieval:** The Bedrock Agent checks **OpenSearch Serverless** to find relevant chunks of the professor's uploaded PDFs in S3.
+6. **Generation:** **Amazon Nova Lite** formulates an encouraging, Socratic response based *only* on the retrieved context.
+7. **Delivery:** The response is streamed back through Lambda and API Gateway to the student's screen in seconds.
+
+---
 
 ## ✨ Key Features
-- **Strict Contextual Grounding:** If a question isn't covered in the S3 syllabus, the AI won't answer it.
-- **Anti-Cheating Guardrails:** Plain-English rules block the generation of direct homework solutions.
-- **Professor Intervention Dashboard:** Real-time telemetry powered by DynamoDB shows professors exactly what concepts students are struggling with and who is trying to bypass the system.
+* **Strict Contextual Grounding:** If a course policy or deadline isn't covered in the S3 syllabus, the AI is programmed to admit it doesn't know, rather than hallucinating an answer.
+* **Anti-Cheating Guardrails:** Plain-English and programmatic rules actively intercept and block the generation of direct homework solutions.
+* **The Socratic Loop:** The AI is engineered with a pedagogical framework that forces it to end responses with an open-ended question, keeping the student actively engaged in problem-solving.
+* **Stateful Session Memory:** Tracks conversation history natively so students can ask follow-up questions without having to re-explain their context.
+* **Zero-Maintenance Infrastructure:** 100% serverless. No EC2 instances to patch, no databases to provision, and scales automatically from 1 to 10,000 students instantly.
 
-## 🏁 How to Run Locally
-*(Add your installation steps, environment variables, and run commands here before you submit!)*
+---
+
+## 👨‍💻 Created by
+**Yidan (Adelin) Ma**  
+🌐 [Personal Website](https://yd025.github.io/) | 🐙 [GitHub Profile](https://github.com/Yd025)
+**Oscar Shijie Song 
+🌐 [Personal Website](https://oscariano.github.io/) | 🐙 [GitHub Profile](https://github.com/oscariano)
