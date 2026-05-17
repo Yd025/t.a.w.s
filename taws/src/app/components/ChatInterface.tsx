@@ -13,7 +13,7 @@ export function ChatInterface() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your AI learning assistant. I have access to your uploaded course materials and notes. How can I help you today?',
+      content: 'Hello! I\'m your AI learning assistant for CSE 451. I have access to course materials including lectures and syllabus. I\'m here to help you understand concepts and guide your learning. How can I assist you today?',
       timestamp: new Date(),
     },
   ]);
